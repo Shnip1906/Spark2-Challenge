@@ -9,3 +9,7 @@
 # Part 1
 - Spark Create a DataFrame: https://sparkbyexamples.com/spark/different-ways-to-create-a-spark-dataframe/
 - Spark DataFrame: https://spark.apache.org/docs/latest/sql-getting-started.html
+- Replace Columns: https://stackoverflow.com/questions/43844389/spark-replace-all-nans-to-null-in-dataframe-api
+- AVG of Group by one column: https://linuxhint.com/avg-pyspark/
+- Rename Columns: https://stackoverflow.com/questions/56557771/use-map-to-replace-column-values-in-spark
+
