@@ -10,23 +10,6 @@ import org.apache.spark.sql.types.{DecimalType, DoubleType, LongType}
  */
 object App {
 
-  private def dev_part1(sparkSession: SparkSession, csv: DataFrame): Unit = {
-    val app_name = "_c0"
-    val sentiment_polarity = "_c3"
-
-    // REPLACE THE EMPTY FIELD OR NULL VALUES FOR 0
-    var df1 = change_value_empty_fields(csv, sentiment_polarity, "0")
-
-    // CREATING A NEW DATAFRAME WITH COL _c0 (APP NAME) and _c3 (Sentiment Polarity)
-    df1 = df1.select(col(app_name), col(sentiment_polarity).cast("double"))
-    df1 = df1.groupBy(app_name).avg(sentiment_polarity)
-
-    // CHANGE COLUMN NAMES
-    df1 = df1.toDF("App", "Average_Sentiment_Polarity")
-
-    df1.show()
-  }
-
   private def dev_part2(sparkSession: SparkSession, csv: DataFrame): Unit = {
     val rating = "_c2"
 
@@ -34,7 +17,7 @@ object App {
     val outputFileName = "best_apps"
 
     // REPLACE THE EMPTY FIELD OR NULL VALUES FOR 0
-    var df2 = change_value_empty_fields(csv, rating, "0")
+    var df2 = csv.na.replace(rating, Map("nan" -> "0", "NaN" -> "0","null" -> "0", "" -> "0"))
 
     // CHANGE THE TYPE OF THE COLUMN _c2 (RATING)
     df2 = df2.withColumn(rating, col(rating).cast(DoubleType)).as(rating)
@@ -50,73 +33,6 @@ object App {
       .csv(outputFileName)
   }
 
-  private def dev_part3(sparkSession: SparkSession, csv: DataFrame): Unit = {
-    val app = "_c0"
-    val category = "_c1"
-    val rating = "_c2"
-    val reviews = "_c3"
-    val size = "_c4"
-    val installs = "_c5"
-    val type_app = "_c6"
-    val price = "_c7"
-    val content_rating = "_c8"
-    val genres = "_c9"
-    val last_updated = "_c10"
-    val current_version = "_c11"
-    val android_version = "_c12"
-
-    var google_play_store = sparkSession.read.csv("./google-play-store-apps/googleplaystore.csv")
-    /*for (i <- google_play_store.columns.indices) {
-      val columnName = google_play_store.columns(i)
-      google_play_store = remove_empty_fields(google_play_store, columnName)
-    }*/
-
-    /*var df3 = csv.na.replace(rating, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE OF REVIEWS
-    df3 = df3.na.replace(reviews, Map("NaN" -> "0"))
-    // CHANGE DEFAULT VALUE OF INSTALLS
-    df3 = df3.na.replace(installs, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE OF TYPE_APP
-    df3 = df3.na.replace(type_app, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE OF PRICE
-    df3 = df3.na.replace(price, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE CONTENT RATING
-    df3 = df3.na.replace(content_rating, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE GENRES
-    df3 = df3.na.replace(genres, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE LAST UPDATED
-    df3 = df3.na.replace(last_updated, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE CURRENT VERSION
-    df3 = df3.na.replace(current_version, Map("NaN" -> null))
-    // CHANGE DEFAULT VALUE ANDROID VERSION
-    df3 = df3.na.replace(android_version, Map("NaN" -> null))
-
-    // CHANGE DATA TYPE OF THR COLUMNS
-      // CATEGORY
-    df3 =  df3.withColumn(category, split(col(category), ";").cast("array<string>"))
-      // RATING
-    df3 = df3.withColumn(rating, col(rating).cast(DoubleType))
-      // REVIEWS
-    df3 = df3.withColumn(reviews, col(reviews).cast(LongType))
-      // REMOVE LAST LETTER FROM SIZE -> Varies with device
-    df3 = df3.withColumn(size,
-      when(substring(upper(col(size)), -1, 1) === "K", trim(upper(col(size)), "K").cast(DoubleType) / 1024)
-        .otherwise(trim(upper(col(size)), "M").cast(DoubleType)))
-      // PRICE
-    df3 = df3.withColumn(price, (trim(col(price), "$").cast(DoubleType) * 0.9).cast(DecimalType(18, 3)))
-      // GENRES
-    df3 =  df3.withColumn(genres, split(col(genres), ";").cast("array<string>"))
-      // LAST UPDATED
-    df3 = df3.withColumn(last_updated, to_date(col(last_updated), "MMMM d, yyyy"))
-*/
-  }
-
-  private def change_value_empty_fields(csv: DataFrame, column: String, defaultValue: String): DataFrame = {
-    val removed_fields = csv.na.replace(column, Map("nan" -> defaultValue, "NaN" -> defaultValue,"null" -> defaultValue, "" -> defaultValue))
-
-    removed_fields
-  }
-
   def main(args: Array[String]): Unit = {
 
     // Initialize Spark
@@ -127,11 +43,22 @@ object App {
     var google_play_store = spark.read.csv("./google-play-store-apps/googleplaystore.csv")
     val google_play_user_review = spark.read.csv("./google-play-store-apps/googleplaystore_user_reviews.csv")
 
+
     /** ********************************* */
     /** ************ PART 1 ************* */
     /** ********************************* */
 
-    //dev_part1(spark, google_play_user_review)
+    // REPLACE THE EMPTY FIELD OR NULL VALUES FOR 0
+    var df1 = google_play_user_review.na.replace("_c3", Map("nan" -> "0", "NaN" -> "0","null" -> "0", "" -> "0"))
+
+    // CREATING A NEW DATAFRAME WITH COL _c0 (APP NAME) and _c3 (Sentiment Polarity)
+    df1 = df1.select(col("_c0"), col("_c3").cast(DoubleType))
+    df1 = df1.groupBy("_c0").avg("_c3")
+
+    // CHANGE COLUMN NAMES
+    df1 = df1.toDF("App", "Average_Sentiment_Polarity")
+
+    df1.show()
 
     /** ********************************* */
     /** ************ PART 2 ************* */
@@ -139,11 +66,10 @@ object App {
 
     //dev_part2(spark, google_play_store)
 
+
     /** ********************************* */
     /** ************ PART 3 ************* */
     /** ********************************* */
-
-    //dev_part3(spark, google_play_store)
 
     // CREATE A DATAFRAME WITH APP AND CATEGORIES ARRAY
     var df3A = google_play_store.groupBy("_c0").agg(concat_ws(",", collect_list(col("_c1"))).as("_c1"))
@@ -176,17 +102,7 @@ object App {
         "FROM google_play_store gp, df3a a, df3c c WHERE a._c0 == gp._c0 AND c._c0 == gp._c0")
 
     // DEFAULT VALUES
-    df3 = df3.na.replace("_c2", Map("NaN" -> null))
-    df3 = df3.na.replace("_c3", Map("NaN" -> "0"))
-    df3 = df3.na.replace("_c4", Map("NaN" -> null))
-    df3 = df3.na.replace("_c5", Map("NaN" -> null))
-    df3 = df3.na.replace("_c6", Map("NaN" -> null))
-    df3 = df3.na.replace("_c7", Map("NaN" -> null))
-    df3 = df3.na.replace("_c8", Map("NaN" -> null))
-    df3 = df3.na.replace("_c9", Map("NaN" -> null))
-    df3 = df3.na.replace("_c10", Map("NaN" -> null))
-    df3 = df3.na.replace("_c11", Map("NaN" -> null))
-    df3 = df3.na.replace("_c12", Map("NaN" -> null))
+    df3 = df3.na.replace(Seq("_c2", "_c3", "_c4", "_c5", "_c6", "_c7", "_c8", "_c9", "_c10", "_c11", "_c12"), Map("NaN" -> null))
 
     // CHANGE DATA TYPE OF THE COLUMNS
     // RATING
@@ -208,5 +124,25 @@ object App {
 
     // SORT BY APP COLUMN
     df3.sort("App").show()
+
+
+    /** ********************************* */
+    /** ************ PART 4 ************* */
+    /** ********************************* */
+
+    val outputFile = "googleplaystore_cleaned"
+
+    df3.createOrReplaceTempView("df3")
+    df1.createOrReplaceTempView("df1")
+
+    val df1_3 = spark.sql("SELECT df3.*, df1.Average_Sentiment_Polarity FROM df3, df1 WHERE df1.App == df3.App")
+
+    df1_3.write
+      .format("parquet")
+      .option("compression", "gzip")
+      .mode("overwrite")
+      .save(outputFile)
+
+    df1_3.show()
   }
 }
