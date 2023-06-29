@@ -55,7 +55,6 @@ object App {
 
     // RATING GREATER OR EQUAL TO 4.0 AND SORTED IN DESCENDING ORDER
     df2.createOrReplaceTempView("df2")
-
     df2 = spark.sql("SELECT df2.* FROM df2 WHERE _c2 >= 4.0 ORDER BY _c2 DESC")
 
     df2.show()
