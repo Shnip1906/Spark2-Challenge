@@ -54,7 +54,11 @@ object App {
     df2 = df2.withColumn("_c2", col("_c2").cast(DoubleType))
 
     // RATING GREATER OR EQUAL TO 4.0 AND SORTED IN DESCENDING ORDER
-    df2 = df2.filter(df2("_c2") >= 4.0).sort(col("_c2").desc)
+    df2.createOrReplaceTempView("df2")
+
+    df2 = spark.sql("SELECT df2.* FROM df2 WHERE _c2 >= 4.0 ORDER BY _c2 DESC")
+
+    df2.show()
 
     // SAVE IN NEW CSV
     df2.write
